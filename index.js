@@ -26,7 +26,7 @@ const allEmployees = () => new Promise((res, req) => {
     select
     a.ID,
     a.first_name,
-    a.last name,
+    a.last_name,
     b.title,
     b.salary,
     concat(c.first_name , " " , c.last_name) as manager
