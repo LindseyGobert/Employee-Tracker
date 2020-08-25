@@ -1,5 +1,7 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var util = require("util");
+const { allowedNodeEnvironmentFlags } = require("process");
 
 // create the connection information for the sql database
 var connection = mysql.createConnection({
@@ -16,34 +18,48 @@ var connection = mysql.createConnection({
   database: "employee_trackerDB"
 });
 
+connection.query = util.promisify(connection.query);
+
 connection.connect(function(err) {
     if (err) throw err;
     employeeTracker();
 });
 
-const allEmployees = () => new Promise((res, req) => {
-    connection.query(`
+const allEmployees = () => {
+    return connection.query(`
     select
-    a.ID,
+    a.id,
     a.first_name,
     a.last_name,
     b.title,
+    d.name as department,
     b.salary,
     concat(c.first_name , " " , c.last_name) as manager
     from employee a
-    left join role b on a.role_id=b.ID
-    left join employee c on a.manager_id=c.ID;
-    `, function(err, data){
-        if (err) throw err; 
-        res(data);
-    })
-});
+    left join role b on a.role_id=b.id
+    left join department d on b.department_id=d.id
+    left join employee c on a.manager_id=c.id;`);
+    
+};
+
+const allRoles = () => {
+    return connection.query(`
+    select * from role;
+    `);
+    
+};
+
+const allDepartments = () => {
+    return connection.query(`
+    SELECT * FROM employee_trackerDB.department;
+    `);
+};
 
 async function employeeTracker() {
     let choice = await inquirer.prompt({
         name: "selection",
         message: "What would you like to do?",
-        choices: ["View All Employees", "Add Employee", "Add Department", "Add Role", "Update Employee Role"],
+        choices: ["View All Employees", "View All Departments", "View All Roles", "Add Employee", "Add Department", "Add Role", "Update Employee Role", "Exit"],
         type: "list"
     });
     switch (choice.selection) {
@@ -54,13 +70,20 @@ async function employeeTracker() {
             });
             break;
 
+        case "View All Departments":
+            allDepartments().then((data) => {
+                console.table(data);
+                employeeTracker();
+            });
+            break;
+
         case "Add Employee":
-            if (err) throw err;
-            const titles = data.map(item => item.title);
+            let roles = await allRoles();
+            let titles = roles.map(item => ({name: item.title, value: item.id}));
             const employees = await allEmployees();
-            const employeeList = employees.map(item => `${item.last_name}, ${item.first_name}`)
-            employeeList.push("null");
-            inquirer.prompt([{
+            const employeeList = employees.map(item => ({name: `${item.last_name}, ${item.first_name}`, value: item.id}))
+            employeeList.unshift({name: "No Manager", value: null});
+            let userInput = await inquirer.prompt([{
                 name: "first_name",
                 message: "First Name: ",
                 type: "input"
@@ -72,21 +95,24 @@ async function employeeTracker() {
 
             },
             {
-                name: "role_title",
+                name: "role_id",
                 message: "Role: ",
                 choices: titles,
                 type: "list"
 
             },
             {
-                name: "manager_name",
+                name: "manager_id",
                 message: "Manager: ",
                 choices: employeeList,
                 type: "list"
 
             },
         
-        ])
+        ]);
+            console.log("userInput", userInput)
+            connection.query(`insert into employee set ?`, userInput)
+            employeeTracker();
 
             break;
 
