@@ -68,6 +68,7 @@ async function employeeTracker() {
                 console.table(data);
                 employeeTracker();
             });
+
             break;
 
         case "View All Departments":
@@ -75,6 +76,15 @@ async function employeeTracker() {
                 console.table(data);
                 employeeTracker();
             });
+
+            break;
+
+        case "View All Roles":
+            allRoles().then((data) => {
+                console.table(data);
+                employeeTracker();
+            });
+            
             break;
 
         case "Add Employee":
@@ -116,29 +126,51 @@ async function employeeTracker() {
 
             break;
 
-        case "Add Department":
-            connection.query("SELECT * FROM employee", function(err,data){
-                if (err) throw err;
-                console.table(data);
-            })
+        // case "Add Department":
+        //     let departmentInput = await inquirer.prompt([{
+        //         name: "department",
+        //         message: "What department would you like to add?",
+        //         type: "input"
 
-            break;
+        //     },
+        // ]);
+        //     console.log("departmentInput", departmentInput)
+        //     connection.query(`insert into employee set ?`, departmentInput)
+        //     employeeTracker();
 
-        case "Add Role":
-            connection.query("SELECT * FROM employee", function(err,data){
-                if (err) throw err;
-                console.table(data);
-            })
+        //     break;
 
-            break;
+        // case "Add Role":
+        //     let roleInput = await inquirer.prompt([{
+        //         name: "title",
+        //         message: "What role would you like to add?",
+        //         type: "input"
+        //     },
+        //     {
+        //         name: "salary",
+        //         message: "What is the salary for this role?",
+        //         type: "input"
+        //     },
+        //     {
+        //         name: "department",
+        //         message: "Which department does this role fall under?",
+        //         choices: departments,
+        //         type: "list"
+        //     }
+        // ]);
+        //     console.log("roleInput", roleInput)
+        //     connection.query(`insert into employee set ?`, roleInput)
+        //     employeeTracker();
 
-        case "Update Employee Role":
-            connection.query("SELECT * FROM employee", function(err,data){
-                if (err) throw err;
-                console.table(data);
-            })
+        //     break;
 
-            break;
+        // case "Update Employee Role":
+        //     connection.query("SELECT * FROM employee", function(err,data){
+        //         if (err) throw err;
+        //         console.table(data);
+        //     })
+
+        //     break;
     }
 
 }
